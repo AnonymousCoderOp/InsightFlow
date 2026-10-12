@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>frontend</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+<!-- INSIGHTFLOW_CURSOR_AURORA -->
+<script>
+(() => {
+  const root = document.documentElement;
+  const reducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  );
+
+  if (reducedMotion.matches) return;
+
+  function initialiseCursorGlow() {
+    if (document.querySelector(".cursor-aurora-glow")) return;
+
+    const glow = document.createElement("div");
+    glow.className = "cursor-aurora-glow";
+    glow.setAttribute("aria-hidden", "true");
+    document.body.insertBefore(glow, document.body.firstChild);
+
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+    let targetX = currentX;
+    let targetY = currentY;
+    let animationFrame = null;
+
+    function animate() {
+      currentX += (targetX - currentX) * 0.12;
+      currentY += (targetY - currentY) * 0.12;
+
+      root.style.setProperty("--cursor-x", currentX + "px");
+      root.style.setProperty("--cursor-y", currentY + "px");
+
+      const stillMoving =
+        Math.abs(targetX - currentX) > 0.4 ||
+        Math.abs(targetY - currentY) > 0.4;
+
+      if (stillMoving) {
+        animationFrame = requestAnimationFrame(animate);
+      } else {
+        currentX = targetX;
+        currentY = targetY;
+        root.style.setProperty("--cursor-x", currentX + "px");
+        root.style.setProperty("--cursor-y", currentY + "px");
+        animationFrame = null;
+      }
+    }
+
+    window.addEventListener("pointermove", (event) => {
+      if (event.pointerType === "touch") return;
+
+      targetX = event.clientX;
+      targetY = event.clientY;
+      glow.classList.add("is-active");
+
+      if (animationFrame === null) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    }, { passive: true });
+
+    window.addEventListener("pointerleave", () => {
+      glow.classList.remove("is-active");
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initialiseCursorGlow, {
+      once: true
+    });
+  } else {
+    initialiseCursorGlow();
+  }
+})();
+</script>
+
+
+<!-- INSIGHTFLOW_SELECTIVE_FOCUS_BLUR -->
+<script>
+(() => {
+  const cardSelector = [
+    ".card", ".panel", '[class*="-card" i]',
+    ".feedback-record", ".feedback-item", ".feedback-card",
+    ".feedback-row",
+    '[class*="feedback" i][class*="record" i]',
+    '[class*="feedback" i][class*="item" i]',
+    '[class*="feedback" i][class*="row" i]',
+    '[class*="metric" i][class*="card" i]',
+    '[class*="chart" i][class*="card" i]',
+    '[class*="issue" i][class*="card" i]',
+    '[class*="decision" i][class*="card" i]',
+    '[class*="report" i][class*="card" i]'
+  ].join(",");
+
+  const protectedSelector = [
+    "header", "aside", "nav",
+    '[role="banner"]', '[role="navigation"]',
+    ".sidebar", ".app-sidebar", ".navigation-sidebar",
+    ".nav-sidebar", 'aside[class*="sidebar" i]',
+    ".app-header", ".page-header", ".topbar", ".top-bar"
+  ].join(",");
+
+  const root = document.getElementById("root");
+  if (!root) return;
+
+  const blurClass = "if-focus-background-blur";
+  const unblurClass = "if-focus-background-unblurring";
+
+  let focusedCard = null;
+  let blurredElements = [];
+
+  function restoreElements(elements) {
+    elements.forEach(el => {
+      el.classList.remove(blurClass);
+      el.classList.add(unblurClass);
+
+      // Keep the reverse transition alive until it finishes.
+      window.setTimeout(() => {
+        el.classList.remove(unblurClass);
+      }, 3100);
+    });
+  }
+
+  function clearFocus() {
+    restoreElements(blurredElements);
+    blurredElements = [];
+    focusedCard = null;
+    document.body.classList.remove("if-focus-active");
+  }
+
+  function blurSiblings(node, focus) {
+    Array.from(node.children).forEach(child => {
+      if (child === focus || child.matches(protectedSelector)) return;
+
+      const containsFocus = child.contains(focus);
+      const containsProtected =
+        child.querySelector(protectedSelector) !== null;
+
+      if (containsFocus || containsProtected) {
+        blurSiblings(child, focus);
+        return;
+      }
+
+      if (["SCRIPT", "STYLE", "LINK"].includes(child.tagName)) return;
+
+      // Reverse any ongoing unblur before starting a new blur.
+      child.classList.remove(unblurClass);
+      child.classList.add(blurClass);
+      blurredElements.push(child);
+    });
+  }
+
+  function setFocus(card) {
+    if (card === focusedCard) return;
+
+    clearFocus();
+    if (!card || !root.contains(card)) return;
+
+    focusedCard = card;
+    document.body.classList.add("if-focus-active");
+    blurSiblings(root, card);
+  }
+
+  document.addEventListener("pointermove", event => {
+    if (event.pointerType === "touch") return;
+
+    const target = event.target;
+    const card = target instanceof Element
+      ? target.closest(cardSelector)
+      : null;
+
+    setFocus(card);
+  }, { passive: true });
+
+  document.addEventListener("pointerout", event => {
+    if (event.relatedTarget === null) clearFocus();
+  });
+
+  window.addEventListener("blur", clearFocus);
+})();
+</script>
+
+</body>
+</html>

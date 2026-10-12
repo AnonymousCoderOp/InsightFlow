@@ -1,0 +1,34 @@
+# API keys and environment secrets
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup and temporary files
+*.bak
+*.backup*
+*.before-*
+.DS_Store
+
+# Node.js and frontend build output
+node_modules/
+dist/
+coverage/
+
+# Editor and operating-system files
+.vscode/
+.idea/
+
+# Recovery artifacts
+*.failed-recovery*
