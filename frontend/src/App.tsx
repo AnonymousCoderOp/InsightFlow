@@ -3843,8 +3843,8 @@ function AdaptionLab({ notify }: { notify: (message: string) => void }) {
         />
         <WorkspaceStat
           title="Human-approved examples"
-          value={String(verifiedCount)}
-          note="Approved for the Adaption review dataset"
+          value={String(verifiedIds.length)}
+          note="Approved review records; duplicates may exist"
         />
       </div>
 
