@@ -3,6 +3,9 @@
 .env.*
 **/.env
 **/.env.*
+# Track templates while keeping real local environment files private
+!.env.example
+!**/.env.example
 
 # Python
 __pycache__/
