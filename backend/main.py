@@ -16,7 +16,9 @@ from pydantic import BaseModel, Field
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent
-DATABASE_PATH = BASE_DIR / "insightflow.db"
+DATABASE_PATH = Path(
+    os.getenv("INSIGHTFLOW_DATABASE_PATH", str(BASE_DIR / "insightflow.db"))
+).resolve()
 
 app = FastAPI(
     title="InsightFlow API",
@@ -24,14 +26,20 @@ app = FastAPI(
     version="1.0.0",
 )
 
+FRONTEND_URL = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+
+ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+]
+if FRONTEND_URL:
+    ALLOWED_ORIGINS.append(FRONTEND_URL)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
